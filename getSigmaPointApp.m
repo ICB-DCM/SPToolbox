@@ -91,7 +91,7 @@
 % SP.dYdxi  ... derivative of Y w.r.t. xi 
 %            [time x observables x 2*parameters+1 x parameters]
 
-function SP = getSigmaPointApp_LCD2(varargin)
+function SP = getSigmaPointApp(varargin)
 
 % phi = phi(beta,b), with b ~ N(0,D)
 %
