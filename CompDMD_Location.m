@@ -31,11 +31,12 @@ optionsPesto = PestoOptions();
 optionsPesto.n_starts = 20;
 optionsPesto.obj_type = 'negative log-posterior';
 optionsPesto.save=true;
-optionsPesto.foldername=sprintf('%s%i%s%i','Multistart info\dim',N,'points',L);
+optionsPesto.foldername=sprintf('%s%i%s%i','MultiInfo\dim',N,'points',L);
 
 %% output
 parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 optx = reshape(parameters.MS.par(:,1),[N,L]);
-filename=sprintf('%s%i%s%i%s','B_SP_dim',N,'points',L,'.csv');
-dlmwrite(fullfile(pwd,sprintf('%s%i%s%i','Dirac components\'),filename),optx,'delimiter',',','precision',12);
+[SPToolboxFolder,~,~]=fileparts(which('CompDMD_Location'))
+filename=sprintf('%s%i%s%i%s','DMDinfo\B_SP_dim',N,'points',L,'.csv');
+dlmwrite(fullfile(SPToolboxFolder,filename),optx,'delimiter',',','precision',12);
 end
