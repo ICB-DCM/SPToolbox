@@ -177,8 +177,8 @@ end
 switch(op_SP.approx)
     case 'dmd'
         diracD = size(D,1);
-        [SPToolboxFolder,~,~]=fileparts(which('CompDMD_Location'));
-        filename=sprintf('%s%i%s%i%s','DMDinfo\B_SP_dim',diracD,'points',op_SP.n_samples,'.csv');
+        [SPToolboxFolder,~,~] = fileparts(which('CompDMD_Location'));
+        filename = sprintf('%s%i%s%i%s','DMDinfo\B_SP_dim',diracD,'points',op_SP.n_samples,'.csv');
         if (~exist(fullfile(SPToolboxFolder,filename),'file'))
             %dimension of dirac mixture distribution
             error('The approximation does not exist. Please run CompDMD_Location first!')

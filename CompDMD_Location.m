@@ -1,6 +1,6 @@
 function [optx]=CompDMD_Location(N,L)
 %% 
-% getSigmaPointLCD.m provides a method to calculate Sigma Points for a
+% CompDMD_Location.m provides a method to calculate Sigma Points for a
 %   user-defined dimensionality and number of components for each dimension.
 %
 %   This function calculates the Sigma Points by minimizing the distance 
@@ -14,6 +14,9 @@ function [optx]=CompDMD_Location(N,L)
 %
 % Return values:
 %   optx: optimizition result of the location of dirac distribution
+%
+% Additional toolbox needed:
+%   Pesto: https://github.com/ICB-DCM/PESTO
 %
 % History:
 % * 2018/01/04 Dantong Wang
