@@ -27,7 +27,7 @@ w = 1/L;
 bmax = 3;
 
 %% calculate D1
-D1 = pi^(N/2)*dmd_IN(N,bmax);
+D1 = pi^(N/2)*dmd_IN(N,bmax)
 
 %% calculate D2
 k = floor(N/2);
@@ -37,7 +37,7 @@ if l == 0
     D2 = (2*pi)^(N/2)*sum(w*(dmd_Jmm(k,x,bmax)-dmd_Jmm(k,x,0)),2);
 % if N is odd
 else
-    D2 = integral(@(b)dmd_D2Integral(N,L,x,b,w),0,3);
+    D2 = integral(@(b)dmd_D2Integral(N,x,b,w),0,3)
 end
 % calclate Tij as a matrix
 %for i = 1:L
@@ -50,7 +50,7 @@ Tij = permute(sum(bsxfun(@minus,x,permute(x,[1,3,2])).^2,1),[2,3,1])+1e-5;
 %% calculate D3
 D31 = bmax^2/2*exp(-1/2*(Tij./(2*bmax^2)));
 D32 = (Tij/8).*ei(-1/2*(Tij./(2*bmax^2)));
-D3 = pi^(N/2)*sum(sum(w*w*(D31+D32),1),2);
+D3 = pi^(N/2)*sum(sum(w*w*(D31+D32),1),2)
 
 %% Gradient
 %% calculate G1
@@ -59,7 +59,7 @@ if l == 0
     G1 = 2*(2*pi)^(N/2)*(w*x.*(dmd_Jkk1(x,k,bmax)-dmd_Jkk1(x,k,0)));
 % if N is odd
 else
-    G1 = 2*(2*pi)^(N/2)*w.*x.*integral(@(b)dmd_G1Integral(N,x,b),0,3,'ArrayValue',true);
+    G1 = 2*(2*pi)^(N/2)*w.*x.*integral(@(b)dmd_G1Integral(N,x,b),0,3,'ArrayValue',true)
 end
 
 %% calculate G2
@@ -77,14 +77,14 @@ en_inT = ei(-1/2*(Tij./(2*bmax^2)));
 %    SIGMA(m,:) = w*sum(tsigma);
 %end
 SIGMA = permute(w*sum(w*bsxfun(@minus,permute(x,[2,3,1]),permute(x,[3,2,1])).*en_inT,2),[3,1,2]);
-G2 = pi^(N/2)/2.*SIGMA;
+G2 = pi^(N/2)/2.*SIGMA
 
 %% output
 D = D1-2*D2+D3;
 G = reshape(G1+G2,[1,N*L]);
 end
 %%
-function D2Int = dmd_D2Integral(N,L,x,b,w)
+function D2Int = dmd_D2Integral(N,x,b,w)
 %% 
 % D2Integral.m calculates the value, which need to be integrated from 0 to
 % bmax(upper bound) to calculate D2, when dimention is odd.
@@ -115,7 +115,8 @@ PI = prod(1./((sigma.^2+2.*b.^2).^(1/2)));
 %    end
 %    SIGMA = SIGMA+exp((-1/2)*s1);
 %end 
-SIGMA = sum(exp((-1/2)*sum(x.^2./(sigma.^2+2.*b.^2),1)));
+%SIGMA = sum(exp((-1/2)*sum(x.^2./(sigma.^2+2.*b.^2),1)));
+SIGMA = permute(sum(exp((-1/2)*sum(bsxfun(@rdivide,x.^2,permute((sigma.^2+2.*b.^2),[1,3,2])),1)),2),[1,3,2]);
 P2 = (2*pi).^(N/2).*b.^(2*N).*PI.*w.*SIGMA;
 D2Int = omega.*P2;
 end
@@ -141,7 +142,7 @@ function G1Int = dmd_G1Integral(N,x,b)
 %% 
 sigma = zeros(N,1)+1;
 PI = prod(1./((sigma.^2+2*b.^2).^(1/2)));
-SIGMA = exp((-1/2)*sum(x.^2./(sigma.^2+2*b.^2)));
+SIGMA = exp((-1/2)*sum(x.^2./(sigma.^2+2*b.^2),1));
 G1Int = b.^(N+1)./(sigma.^2+2*b.^2)*PI*SIGMA;
 end
 %%
@@ -180,7 +181,7 @@ elseif l == 0
     %    SIGMA = SIGMA+(b^(2*i)*((1+b^2)^(1/2))^(2-2*i))/(2*i*(2*i-2));
     %end
     i = (2:k-1)';
-    SIGMA = sum((b.^(2*i).*((1+b^2)^(1/2)).^(2-2*i))./(2*i.*(2*i-2)));
+    SIGMA = sum((b.^(2*i).*((1+b^2)^(1/2)).^(2-2*i))./(2*i.*(2*i-2)),1);
     IN = 2*k*(I2-SIGMA)-(b^(2*k)*((1+b^2)^(1/2))^(2-2*k))/(2*k-2);
 %if N is odd
 else
@@ -188,7 +189,7 @@ else
     %    SIGMA = SIGMA+(b^(2*i+1)*((1+b^2)^(1/2))^(1-2*i))/((2*i+1)*(2*i-1));
     %end
     i = (1:k-1)';
-    SIGMA=sum((b.^(2*i+1).*((1+b^2)^(1/2)).^(1-2*i))./((2*i+1).*(2*i-1)));
+    SIGMA=sum((b.^(2*i+1).*((1+b^2)^(1/2)).^(1-2*i))./((2*i+1).*(2*i-1)),1);
     IN = (2*k+1)*(I1-SIGMA)-(b^(2*k+1)*((1+b^2)^(1/2))^(1-2*k))/(2*k-1);
 end
 end
