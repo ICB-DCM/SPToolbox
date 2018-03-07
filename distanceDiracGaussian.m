@@ -27,7 +27,7 @@ w = 1/L;
 bmax = 3;
 
 %% calculate D1
-D1 = pi^(N/2)*dmd_IN(N,bmax)
+D1 = pi^(N/2)*dmd_IN(N,bmax);
 
 %% calculate D2
 k = floor(N/2);
@@ -37,20 +37,15 @@ if l == 0
     D2 = (2*pi)^(N/2)*sum(w*(dmd_Jmm(k,x,bmax)-dmd_Jmm(k,x,0)),2);
 % if N is odd
 else
-    D2 = integral(@(b)dmd_D2Integral(N,x,b,w),0,3)
+    D2 = integral(@(b)dmd_D2Integral(N,x,b,w),0,3);
 end
 % calclate Tij as a matrix
-%for i = 1:L
-%    for j = 1:L
-%        Tij(i,j) = sum((x(:,i)-x(:,j)).^2)+1e-5;
-%    end
-%end
 Tij = permute(sum(bsxfun(@minus,x,permute(x,[1,3,2])).^2,1),[2,3,1])+1e-5;
 
 %% calculate D3
 D31 = bmax^2/2*exp(-1/2*(Tij./(2*bmax^2)));
 D32 = (Tij/8).*ei(-1/2*(Tij./(2*bmax^2)));
-D3 = pi^(N/2)*sum(sum(w*w*(D31+D32),1),2)
+D3 = pi^(N/2)*sum(sum(w*w*(D31+D32),1),2);
 
 %% Gradient
 %% calculate G1
@@ -59,25 +54,15 @@ if l == 0
     G1 = 2*(2*pi)^(N/2)*(w*x.*(dmd_Jkk1(x,k,bmax)-dmd_Jkk1(x,k,0)));
 % if N is odd
 else
-    G1 = 2*(2*pi)^(N/2)*w.*x.*integral(@(b)dmd_G1Integral(N,x,b),0,3,'ArrayValue',true)
+    G1 = 2*(2*pi)^(N/2)*w.*x.*integral(@(b)dmd_G1Integral(N,x,b),0,3,'ArrayValue',true);
 end
 
 %% calculate G2
 %calculate exponential interation of Tij
 en_inT = ei(-1/2*(Tij./(2*bmax^2)));
 %calculate the sigma in G2
-%for m = 1:N
-%    for i = 1:L
-%        for j = 1:L
-%            dif(i,j) = x(m,i)-x(m,j);
-%            sigma(i,j) = w*dif(i,j)*en_inT(i,j);
-%        end
-%    end
-%    tsigma = sigma';
-%    SIGMA(m,:) = w*sum(tsigma);
-%end
 SIGMA = permute(w*sum(w*bsxfun(@minus,permute(x,[2,3,1]),permute(x,[3,2,1])).*en_inT,2),[3,1,2]);
-G2 = pi^(N/2)/2.*SIGMA
+G2 = pi^(N/2)/2.*SIGMA;
 
 %% output
 D = D1-2*D2+D3;
@@ -108,14 +93,6 @@ function D2Int = dmd_D2Integral(N,x,b,w)
 omega = b.^(1-N);
 sigma = zeros(N,1)+1;
 PI = prod(1./((sigma.^2+2.*b.^2).^(1/2)));
-%for i = 1:L
-%    s1 = 0;
-%    for j = 1:N
-%        s1 = s1+x(j,i)^2./(sigma(j)^2+2.*b.^2);
-%    end
-%    SIGMA = SIGMA+exp((-1/2)*s1);
-%end 
-%SIGMA = sum(exp((-1/2)*sum(x.^2./(sigma.^2+2.*b.^2),1)));
 SIGMA = permute(sum(exp((-1/2)*sum(bsxfun(@rdivide,x.^2,permute((sigma.^2+2.*b.^2),[1,3,2])),1)),2),[1,3,2]);
 P2 = (2*pi).^(N/2).*b.^(2*N).*PI.*w.*SIGMA;
 D2Int = omega.*P2;
@@ -177,17 +154,11 @@ elseif N == 4
     IN = k*I2-(b^(2*k)*((1+b^2)^(1/2))^(2-2*k))/(2*k-2);
 %if N is even
 elseif l == 0
-    %for i = 2:k-1
-    %    SIGMA = SIGMA+(b^(2*i)*((1+b^2)^(1/2))^(2-2*i))/(2*i*(2*i-2));
-    %end
     i = (2:k-1)';
     SIGMA = sum((b.^(2*i).*((1+b^2)^(1/2)).^(2-2*i))./(2*i.*(2*i-2)),1);
     IN = 2*k*(I2-SIGMA)-(b^(2*k)*((1+b^2)^(1/2))^(2-2*k))/(2*k-2);
 %if N is odd
 else
-    %for i = 1:k-1
-    %    SIGMA = SIGMA+(b^(2*i+1)*((1+b^2)^(1/2))^(1-2*i))/((2*i+1)*(2*i-1));
-    %end
     i = (1:k-1)';
     SIGMA=sum((b.^(2*i+1).*((1+b^2)^(1/2)).^(1-2*i))./((2*i+1).*(2*i-1)),1);
     IN = (2*k+1)*(I1-SIGMA)-(b^(2*k+1)*((1+b^2)^(1/2))^(1-2*k))/(2*k-1);
@@ -219,10 +190,6 @@ if l == 0
 elseif l == 1
     J0l = -1/4.*ex_in;
 else
-    %SIGMA = 0;
-    %for j = 2:l
-    %    SIGMA = SIGMA+(factorial(l-2)*2^(l-j-1))./(factorial(l-2).*c.^(l-j+1).*(1+2*b^2)^(j-2));
-    %end
     j = (2:l)';
     SIGMA = sum((factorial(l-2)*2.^(l-j-1))./(factorial(l-2).*c.^(l-j+1).*(1+2*b^2).^(j-2)),1);
     J0l = exp(divc).*SIGMA;
