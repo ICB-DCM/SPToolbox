@@ -223,7 +223,7 @@ else
     %    SIGMA = SIGMA+(factorial(l-2)*2^(l-j-1))./(factorial(l-2).*c.^(l-j+1).*(1+2*b^2)^(j-2));
     %end
     j = (2:l)';
-    SIGMA = sum((factorial(l-2)*2.^(l-j-1))./(factorial(l-2).*c.^(l-j+1).*(1+2*b^2).^(j-2)));
+    SIGMA = sum((factorial(l-2)*2.^(l-j-1))./(factorial(l-2).*c.^(l-j+1).*(1+2*b^2).^(j-2)),1);
     J0l = exp(divc).*SIGMA;
 end
 end
