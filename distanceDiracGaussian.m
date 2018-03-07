@@ -34,7 +34,7 @@ k = floor(N/2);
 l = N - k*2;
 % if N is even
 if l == 0
-    D2 = (2*pi)^(N/2)*sum(w*(dmd_Jmm(k,x,bmax)-dmd_Jmm(k,x,0)));
+    D2 = (2*pi)^(N/2)*sum(w*(dmd_Jmm(k,x,bmax)-dmd_Jmm(k,x,0)),2);
 % if N is odd
 else
     D2 = integral(@(b)dmd_D2Integral(N,L,x,b,w),0,3);
@@ -50,7 +50,7 @@ Tij = permute(sum(bsxfun(@minus,x,permute(x,[1,3,2])).^2,1),[2,3,1])+1e-5;
 %% calculate D3
 D31 = bmax^2/2*exp(-1/2*(Tij./(2*bmax^2)));
 D32 = (Tij/8).*ei(-1/2*(Tij./(2*bmax^2)));
-D3 = pi^(N/2)*sum(sum(w*w*(D31+D32)));
+D3 = pi^(N/2)*sum(sum(w*w*(D31+D32),1),2);
 
 %% Gradient
 %% calculate G1
@@ -210,7 +210,7 @@ function J0l = dmd_J0l(x,b,l)
 % * 2018/01/04 Dantong Wang
 
 %% calculate J01
-c = sum(x.^2);
+c = sum(x.^2,1);
 divc = -c./(2+4*b^2);
 ex_in = ei(divc);
 if l == 0

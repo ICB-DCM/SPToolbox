@@ -33,8 +33,8 @@ objectiveFunction = @(x) distanceDiracGaussian(x,N,L);
 optionsPesto = PestoOptions();
 optionsPesto.n_starts = 20;
 optionsPesto.obj_type = 'negative log-posterior';
-optionsPesto.save=true;
-optionsPesto.foldername=sprintf('%s%i%s%i','MultiInfo\dim',N,'points',L);
+optionsPesto.save=false;
+%optionsPesto.foldername=sprintf('%s%i%s%i','MultiInfo\dim',N,'points',L);
 
 %% output
 parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
