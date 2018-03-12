@@ -52,6 +52,8 @@
 %    .approx ... string specifying the approximation method. either
 %            'sp' for sigma_points
 %            'sampled' for sampling based approximation
+%            'dmd' for approximation by dirac mixtrue distribution
+%    .n_samples ... number of dirac mixture components, only defined if op_SP.approx='dmd'
 %
 % OUTPUTS:
 % =======
@@ -117,7 +119,7 @@ delta = estruct.delta(xi);
 n_b = size(D,1);
 
 if(~isfield(op_SP,'approx'))
-    op_SP.approx = 'sp'
+    op_SP.approx = 'sp';
 end
 if(strcmp(op_SP.approx,'samples'))
 if(~isfield(op_SP,'samples'))
@@ -173,6 +175,24 @@ else
 end
 
 switch(op_SP.approx)
+    case 'dmd'
+        diracD = size(D,1);
+        [SPToolboxFolder,~,~] = fileparts(which('CompDMD_Location'));
+        filename = sprintf('%s%i%s%i%s','DMDinfo\B_SP_dim',diracD,'points',op_SP.n_samples,'.csv');
+        if (~exist(fullfile(SPToolboxFolder,filename),'file'))
+            %dimension of dirac mixture distribution
+            error('The approximation does not exist. Please run CompDMD_Location first!')
+        else
+            %Dirac Mixture location for normal distribution
+            B_SPNorm = importdata(fullfile(SPToolboxFolder,filename));
+        end
+        SP.B_SP = S*B_SPNorm;
+        if compute_derivative == 1
+            SP.dB_SPdxi = permute(sum(bsxfun(@times,B_SPNorm,permute(dSdxi,[2,4,1,3])),1),[3,4,2,1]);
+        end
+        % Weights
+        w_m = 1/(size(SP.B_SP,2))*ones(size(SP.B_SP,2),1);
+        w_c = 1/((size(SP.B_SP,2))-1)*ones(size(SP.B_SP,2),1);
     case 'samples'
         SP.B_SP = transpose(op_SP.samples*S);
         if compute_derivative == 1
