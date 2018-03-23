@@ -39,7 +39,7 @@ optionsPesto.save=false;
 %% output
 parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 optx = reshape(parameters.MS.par(:,1),[N,L]);
-[SPToolboxFolder,~,~]=fileparts(which('CompDMD_Location'))
+[SPToolboxFolder,~,~]=fileparts(which('CompDMD_Location'));
 filename=sprintf('%s%i%s%i%s','DMDinfo\B_SP_dim',N,'points',L,'.csv');
 dlmwrite(fullfile(SPToolboxFolder,filename),optx,'delimiter',',','precision',12);
 end
