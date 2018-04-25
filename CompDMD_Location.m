@@ -1,4 +1,4 @@
-function [optx]=CompDMD_Location(N,L)
+function [opt]=CompDMD_Location(N,L)
 %% 
 % CompDMD_Location.m provides a method to calculate Sigma Points for a
 %   user-defined dimensionality and number of components for each dimension.
@@ -42,25 +42,29 @@ optx = reshape(parametersx.MS.par(:,1),[N,L-1]);
 optx = [optx,-sum(optx,2)];
 
 %% optimize weights for covariance
-parametersx.number = N*(L-1);
-parametersx.min = -3*ones(1,parametersx.number);
-parametersx.max = 3*ones(1,parametersx.number);
+parametersw.number = L-1;
+parametersw.min = zeros(1,parametersw.number);
+parametersw.max = ones(1,parametersw.number);
+parametersw.constraints.A = ones(1,parametersw.number);
+parametersw.constraints.b = 1;
 
 %% Log-likelihood function
-objectiveFunctionx = @(x) distanceTrueMean(x,N,L);
+objectiveFunctionw = @(w_c) obj_variance(w_c,optx,N,L);
 
 %% Set options
 optionsPesto = PestoOptions();
+optionsPesto.localOptimizer = 'fmincon';
 optionsPesto.n_starts = 20;
 optionsPesto.obj_type = 'negative log-posterior';
 optionsPesto.save=false;
 %optionsPesto.foldername=sprintf('%s%i%s%i','MultiInfo\dim',N,'points',L);
 
 %% optimize locations
-parametersx = getMultiStarts(parametersx, objectiveFunctionx, optionsPesto);
-optx = reshape(parametersx.MS.par(:,1),[N,L-1]);
-optx = [optx,-sum(optx,2)];
-%[SPToolboxFolder,~,~]=fileparts(which('CompDMD_Location'));
-%filename=sprintf('%s%i%s%i%s','DMDTrueMeanInfo\B_SP_dim',N,'points',L,'.csv');
-%dlmwrite(fullfile(SPToolboxFolder,filename),optx,'delimiter',',','precision',12);
+parametersw = getMultiStarts(parametersw, objectiveFunctionw, optionsPesto);
+optw = reshape(parametersw.MS.par(:,1),[1,L-1]);
+optw = [optw,1-sum(optw,2)];
+opt = [optx;optw];
+[SPToolboxFolder,~,~]=fileparts(which('CompDMD_Location'));
+filename=sprintf('%s%i%s%i%s','DMDw_cInfo\B_SP_dim',N,'points',L,'.csv');
+dlmwrite(fullfile(SPToolboxFolder,filename),opt,'delimiter',',','precision',12);
 end

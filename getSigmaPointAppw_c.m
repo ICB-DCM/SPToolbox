@@ -91,7 +91,7 @@
 % SP.dYdxi  ... derivative of Y w.r.t. xi 
 %            [time x observables x 2*parameters+1 x parameters]
 
-function SP = getSigmaPointAppTM(varargin)
+function SP = getSigmaPointAppw_c(varargin)
 
 % phi = phi(beta,b), with b ~ N(0,D)
 %
@@ -178,21 +178,23 @@ switch(op_SP.approx)
     case 'dmd'
         diracD = size(D,1);
         [SPToolboxFolder,~,~] = fileparts(which('CompDMD_Location'));
-        filename = sprintf('%s%i%s%i%s','DMDTrueMeaninfo\B_SP_dim',diracD,'points',op_SP.n_samples,'.csv');
+        filename = sprintf('%s%i%s%i%s','DMDw_cInfo\B_SP_dim',diracD,'points',op_SP.n_samples,'.csv');
         if (~exist(fullfile(SPToolboxFolder,filename),'file'))
             %dimension of dirac mixture distribution
             error('The approximation does not exist. Please run CompDMD_Location first!')
         else
             %Dirac Mixture location for normal distribution
-            B_SPNorm = importdata(fullfile(SPToolboxFolder,filename));
+            B_SPwx = importdata(fullfile(SPToolboxFolder,filename));
         end
-        SP.B_SP = S*B_SPNorm;
+        B_SPx = B_SPwx(1:diracD,:);
+        SP.B_SP = S*B_SPx;
         if compute_derivative == 1
             SP.dB_SPdxi = permute(sum(bsxfun(@times,B_SPNorm,permute(dSdxi,[2,4,1,3])),1),[3,4,2,1]);
         end
         % Weights
         w_m = 1/(size(SP.B_SP,2))*ones(size(SP.B_SP,2),1);
-        w_c = 1/((size(SP.B_SP,2))-1)*ones(size(SP.B_SP,2),1);
+        %w_c = 1/((size(SP.B_SP,2))-1)*ones(size(SP.B_SP,2),1);
+        w_c = B_SPwx(diracD+1,:)';
     case 'samples'
         SP.B_SP = transpose(op_SP.samples*S);
         if compute_derivative == 1
