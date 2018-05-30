@@ -57,7 +57,6 @@ optionsPesto.localOptimizer = 'fmincon';
 optionsPesto.n_starts = 20;
 optionsPesto.obj_type = 'negative log-posterior';
 optionsPesto.save=false;
-%optionsPesto.foldername=sprintf('%s%i%s%i','MultiInfo\dim',N,'points',L);
 
 %% optimize locations
 parametersw = getMultiStarts(parametersw, objectiveFunctionw, optionsPesto);
@@ -65,6 +64,6 @@ optw = reshape(parametersw.MS.par(:,1),[1,L-1]);
 optw = [optw,1-sum(optw,2)];
 opt = [optx;optw];
 [SPToolboxFolder,~,~]=fileparts(which('CompDMD_Location'));
-filename=sprintf('%s%i%s%i%s','DMDw_cInfo\B_SP_dim',N,'points',L,'.csv');
+filename=sprintf('%s%i%s%i%s','DMDw_cPosInfo\B_SP_dim',N,'points',L,'.csv');
 dlmwrite(fullfile(SPToolboxFolder,filename),opt,'delimiter',',','precision',12);
 end
