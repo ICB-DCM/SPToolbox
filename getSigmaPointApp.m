@@ -125,7 +125,7 @@ if(strcmp(op_SP.approx,'samples'))
 if(~isfield(op_SP,'samples'))
     persistent samples
     if(isempty(samples))
-        samples = mvnrnd(zeros(n_b,1),eye(n_b),10000);
+        samples = mvnrnd(zeros(n_b,1),eye(n_b),100000);
     end
     op_SP.samples = samples;
     end
@@ -201,6 +201,40 @@ switch(op_SP.approx)
         % Weights
         w_m = 1/(size(SP.B_SP,2))*ones(size(SP.B_SP,2),1);
         w_c = 1/((size(SP.B_SP,2))-1)*ones(size(SP.B_SP,2),1);
+    case 'halton'
+        samplescdf = net(haltonset(2,'skip',100),op_SP.n_samples);
+        op_SP.samples = norminv(samplescdf,0,1);
+        SP.B_SP = transpose(op_SP.samples*S);
+        % Weights
+        w_m = 1/(size(SP.B_SP,2))*ones(size(SP.B_SP,2),1);
+        w_c = 1/((size(SP.B_SP,2))-1)*ones(size(SP.B_SP,2),1);
+    case 'sobol'
+        samplescdf = net(sobolset(2,'skip',100),op_SP.n_samples);
+        op_SP.samples = norminv(samplescdf,0,1);
+        SP.B_SP = transpose(op_SP.samples*S);
+        % Weights
+        w_m = 1/(size(SP.B_SP,2))*ones(size(SP.B_SP,2),1);
+        w_c = 1/((size(SP.B_SP,2))-1)*ones(size(SP.B_SP,2),1);
+    case 'symmetric1'
+        [w_m,SP.B_SP] = symmetric1(L);
+        w_m = w_m';
+        w_c = w_m;
+    case 'symmetric7'
+        [w_m,SP.B_SP] = symmetric7(L);
+        w_m = w_m';
+        w_c = w_m;
+    case 'minimum12'
+        [w_m,SP.B_SP] = minimum12(L);
+        w_m = w_m';
+        w_c = w_m;
+    case 'fifth37'
+        [w_m,SP.B_SP] = fifth37(L);
+        w_m = w_m';
+        w_c = w_m;
+    case 'set38'
+        [w_m,SP.B_SP] = set38(L,op_SP.n_samples);
+        w_m = w_m';
+        w_c = w_m;
     otherwise
         % Sigma points
         SP.B_SP = [zeros(L,1),sqrt(L+lam)*S,-sqrt(L+lam)*S];

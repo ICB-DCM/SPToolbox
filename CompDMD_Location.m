@@ -58,7 +58,7 @@ optionsPesto.n_starts = 20;
 optionsPesto.obj_type = 'negative log-posterior';
 optionsPesto.save=false;
 
-%% optimize locations
+%% results
 parametersw = getMultiStarts(parametersw, objectiveFunctionw, optionsPesto);
 optw = reshape(parametersw.MS.par(:,1),[1,L-1]);
 optw = [optw,1-sum(optw,2)];
