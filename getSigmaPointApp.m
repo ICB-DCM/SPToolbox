@@ -125,7 +125,7 @@ if(strcmp(op_SP.approx,'samples'))
 if(~isfield(op_SP,'samples'))
     persistent samples
     if(isempty(samples))
-        samples = mvnrnd(zeros(n_b,1),eye(n_b),100000);
+        samples = mvnrnd(zeros(n_b,1),eye(n_b),1000);
     end
     op_SP.samples = samples;
     end
@@ -257,6 +257,7 @@ end
 
 for i = 1:size(SP.B_SP,2)
     if compute_derivative == 0
+        i
         Y(:,:,i) = nonfun(estruct.phi(beta,SP.B_SP(:,i)));
     else
         [Y(:,:,i),dYdphi(:,:,:,i)] = nonfun(estruct.phi(beta,SP.B_SP(:,i)));
