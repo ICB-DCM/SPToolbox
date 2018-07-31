@@ -125,7 +125,7 @@ if(strcmp(op_SP.approx,'samples'))
 if(~isfield(op_SP,'samples'))
     persistent samples
     if(isempty(samples))
-        samples = mvnrnd(zeros(n_b,1),eye(n_b),1000);
+        samples = mvnrnd(zeros(n_b,1),eye(n_b),10000);
     end
     op_SP.samples = samples;
     end
@@ -190,6 +190,11 @@ switch(op_SP.approx)
         if compute_derivative == 1
             SP.dB_SPdxi = permute(sum(bsxfun(@times,B_SPNorm,permute(dSdxi,[2,4,1,3])),1),[3,4,2,1]);
         end
+        case 'dmdrot'
+        SP.B_SP = S*SP.B_SP;
+        if compute_derivative == 1
+            SP.dB_SPdxi = permute(sum(bsxfun(@times,B_SPNorm,permute(dSdxi,[2,4,1,3])),1),[3,4,2,1]);
+        end
         % Weights
         w_m = 1/(size(SP.B_SP,2))*ones(size(SP.B_SP,2),1);
         w_c = 1/((size(SP.B_SP,2))-1)*ones(size(SP.B_SP,2),1);
@@ -215,23 +220,28 @@ switch(op_SP.approx)
         % Weights
         w_m = 1/(size(SP.B_SP,2))*ones(size(SP.B_SP,2),1);
         w_c = 1/((size(SP.B_SP,2))-1)*ones(size(SP.B_SP,2),1);
-    case 'symmetric1'
+        % N = 2n+1
+    case 'Julier1'
         [w_m,SP.B_SP] = symmetric1(L);
         w_m = w_m';
         w_c = w_m;
-    case 'symmetric7'
+        % N = 2n+1
+    case 'Julier2'
         [w_m,SP.B_SP] = symmetric7(L);
         w_m = w_m';
         w_c = w_m;
-    case 'minimum12'
+        % N = n+1
+    case 'Menegaz'
         [w_m,SP.B_SP] = minimum12(L);
         w_m = w_m';
         w_c = w_m;
-    case 'fifth37'
+        % N = 2n^2+1
+    case 'Lerner'
         [w_m,SP.B_SP] = fifth37(L);
         w_m = w_m';
         w_c = w_m;
-    case 'set38'
+        % N = phi^n
+    case 'Charalampidis'
         [w_m,SP.B_SP] = set38(L,op_SP.n_samples);
         w_m = w_m';
         w_c = w_m;
@@ -257,7 +267,6 @@ end
 
 for i = 1:size(SP.B_SP,2)
     if compute_derivative == 0
-        i
         Y(:,:,i) = nonfun(estruct.phi(beta,SP.B_SP(:,i)));
     else
         [Y(:,:,i),dYdphi(:,:,:,i)] = nonfun(estruct.phi(beta,SP.B_SP(:,i)));
