@@ -90,6 +90,23 @@
 %            [parameters x 2*parameters+1 x parameters]
 % SP.dYdxi  ... derivative of Y w.r.t. xi 
 %            [time x observables x 2*parameters+1 x parameters]
+% REFERENCES:
+% =======
+% --'dmd': I. Gilitschenski and U. D. Hanebeck, "Efficient Deterministic
+% Dirac Mixture Approximation of Gaussian Distributions", IEEE,2013.
+% --'Julier1': S. J. Julier, J. K. Uhlmann and H. F. Durrant-Whyte, "A new
+% approach for filtering nonlinear systems", IEEE American Control Conf., 
+% 1995.
+% --'Julier2': S. J. Julier and J. K. Uhlmann, "Unscented filtering and
+% nonlinear estimation", IEEE, 2004.
+% --'Menegaz': H. M. Menegaz, J. Y. Ishihara and G. A. Borges, "A new
+% smallest sigma set for the Unscented Transform and its applications on
+% SLAM", IEEE, 2011.
+% --'Lerner': U. N. Lerner, "Hybrid Bayesian Networks for Reasoning About
+% Complex Systems", Ph. D., Stanford University, 2002.
+% --'Charalampidis': A. C. Charalampidis and G. P. Papavassilopoulos,
+% "Development and numerical investigation of new non-linear Kalman filter
+% variants", IET Control Theory&Applications, 2011.
 
 function SP = getSigmaPointApp(varargin)
 
@@ -184,14 +201,9 @@ switch(op_SP.approx)
             error('The approximation does not exist. Please run CompDMD_Location first!')
         else
             %Dirac Mixture location for normal distribution
-            B_SPx = importdata(fullfile(SPToolboxFolder,filename));
+            B_SPNorm = importdata(fullfile(SPToolboxFolder,filename));
         end
-        SP.B_SP = S*B_SPx;
-        if compute_derivative == 1
-            SP.dB_SPdxi = permute(sum(bsxfun(@times,B_SPNorm,permute(dSdxi,[2,4,1,3])),1),[3,4,2,1]);
-        end
-        case 'dmdrot'
-        SP.B_SP = S*SP.B_SP;
+        SP.B_SP = S*B_SPNorm;
         if compute_derivative == 1
             SP.dB_SPdxi = permute(sum(bsxfun(@times,B_SPNorm,permute(dSdxi,[2,4,1,3])),1),[3,4,2,1]);
         end
@@ -206,44 +218,87 @@ switch(op_SP.approx)
         % Weights
         w_m = 1/(size(SP.B_SP,2))*ones(size(SP.B_SP,2),1);
         w_c = 1/((size(SP.B_SP,2))-1)*ones(size(SP.B_SP,2),1);
-    case 'halton'
+    case 'halton'    % Halton Monte Carlo sequence
         samplescdf = net(haltonset(2,'skip',100),op_SP.n_samples);
         op_SP.samples = norminv(samplescdf,0,1);
         SP.B_SP = transpose(op_SP.samples*S);
+        if compute_derivative == 1
+            SP.dB_SPdxi = permute(sum(bsxfun(@times,op_SP.samples,permute(dSdxi,[4,1,2,3])),2),[3,4,1,2]);
+        end
         % Weights
         w_m = 1/(size(SP.B_SP,2))*ones(size(SP.B_SP,2),1);
         w_c = 1/((size(SP.B_SP,2))-1)*ones(size(SP.B_SP,2),1);
-    case 'sobol'
+    case 'sobol'    % Sobol Monte Carlo sequence
         samplescdf = net(sobolset(2,'skip',100),op_SP.n_samples);
         op_SP.samples = norminv(samplescdf,0,1);
         SP.B_SP = transpose(op_SP.samples*S);
+        if compute_derivative == 1
+            SP.dB_SPdxi = permute(sum(bsxfun(@times,op_SP.samples,permute(dSdxi,[4,1,2,3])),2),[3,4,1,2]);
+        end
         % Weights
         w_m = 1/(size(SP.B_SP,2))*ones(size(SP.B_SP,2),1);
-        w_c = 1/((size(SP.B_SP,2))-1)*ones(size(SP.B_SP,2),1);
-        % N = 2n+1
-    case 'Julier1'
-        [w_m,SP.B_SP] = symmetric1(L);
-        w_m = w_m';
+        w_c = 1/((size(SP.B_SP,2))-1)*ones(size(SP.B_SP,2),1);        
+    case 'Julier1'    % N = 2n+1
+        SP.B_SP = [zeros(L,1),sqrt(L+kap)*S,-sqrt(L+kap)*S];
+        if compute_derivative == 1
+            SP.dB_SPdxi = permute([zeros(L,1,n_xi),sqrt(L+kap)*dSdxi,-sqrt(L+kap)*dSdxi],[1,3,2]);
+        end
+        % Weights
+        w0_m = kap/(L+kap);
+        wi_m = 1/(2*(L+kap));
+        w_m = [w0_m;wi_m*ones(2*L,1)];
+        w_c = w_m;        
+    case 'Julier2'    % N = 2n+1
+        w0 = -1;
+        SP.B_SP = [zeros(L,1),sqrt(L/(1-w0))*S,-sqrt(L/(1-w0))*S];
+        if compute_derivative == 1
+            SP.dB_SPdxi = permute([zeros(L,1,n_xi),sqrt(L/(1-w0))*dSdxi,-sqrt(L/(1-w0))*dSdxi],[1,3,2]);
+        end
+        % Weights
+        wi_m = (1-w0)/(2*L);
+        w_m = [w0,wi_m*ones(1,2*L)]';
+        w_c = w_m;        
+    case 'Menegaz'    % N = n+1
+        wl = 0.5;
+        C = chol(eye(L)-repmat((1-wl)/L,L),'lower');
+        wi = diag(inv(C)*wl*repmat((1-wl)/L,L)*inv(C'));
+        SP.B_SP = [S*C*inv(chol(diag(wi),'lower')),-sqrt((1-wl)/L)*S*(ones(L,1)/sqrt(wl))];
+        if compute_derivative == 1
+            SP.dB_SPdxi =  permute([permute(sum(bsxfun(@times,inv(chol(diag(wi))),...
+                permute(sum(bsxfun(@times,C,permute(dSdxi,[2,4,1,3])),1),[2,1,3,4])),1),[3,2,4,1]),...
+                -sqrt((1-wl)/L)*permute(sum(bsxfun(@times,(ones(L,1)/sqrt(wl)),...
+                permute(dSdxi,[2,4,1,3])),1),[3,2,4,1])],[1,3,2]);
+        end
+        % Weights
+        w_m = [wi',wl]';
+        w_c = w_m;        
+    case 'Lerner'    % N = 2n^2+1
+        gen1 = [perms([sqrt(3),zeros(1,L-1)])',perms([-sqrt(3),zeros(1,L-1)])'];
+        gen2 = [perms([sqrt(3),sqrt(3),zeros(1,L-2)])',...
+        perms([sqrt(3),-sqrt(3),zeros(1,L-2)])',...
+        perms([-sqrt(3),sqrt(3),zeros(1,L-2)])',...
+        perms([-sqrt(3),-sqrt(3),zeros(1,L-2)])'];
+        gen = unique([gen1,gen2,zeros(L,1)]','rows','stable')';
+        SP.B_SP = S*gen;
+        if compute_derivative == 1
+            SP.dB_SPdxi = permute(sum(bsxfun(@times,gen,permute(dSdxi,[2,4,1,3])),1),[3,4,2,1]);
+        end
+        % Weights
+        w_m = [(4-L)/18*ones(1,2*L),1/36*ones(1,2*L^2-2*L),(L^2-7*L)/18+1]';
         w_c = w_m;
-        % N = 2n+1
-    case 'Julier2'
-        [w_m,SP.B_SP] = symmetric7(L);
-        w_m = w_m';
-        w_c = w_m;
-        % N = n+1
-    case 'Menegaz'
-        [w_m,SP.B_SP] = minimum12(L);
-        w_m = w_m';
-        w_c = w_m;
-        % N = 2n^2+1
-    case 'Lerner'
-        [w_m,SP.B_SP] = fifth37(L);
-        w_m = w_m';
-        w_c = w_m;
-        % N = phi^n
-    case 'Charalampidis'
-        [w_m,SP.B_SP] = set38(L,op_SP.n_samples);
-        w_m = w_m';
+    case 'Charalampidis'    % N = phi^n
+        phi = op_SP.n_samples;
+        i = 1:phi;
+        yi = norminv((2*i-1)/(2*phi));
+        xi = sqrt(phi/sum(yi.^2))*yi;
+        %Sigma point for normal distribution
+        B_SPNorm = unique(nchoosek(repmat(xi,[1,L]),L),'rows','stable')';
+        SP.B_SP = S*B_SPNorm;
+        if compute_derivative == 1
+            SP.dB_SPdxi = permute(sum(bsxfun(@times,B_SPNorm,permute(dSdxi,[2,4,1,3])),1),[3,4,2,1]);
+        end
+        % Weights
+        w_m = (ones(1,phi^L)*1/phi^L)';
         w_c = w_m;
     otherwise
         % Sigma points

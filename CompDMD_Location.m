@@ -22,9 +22,9 @@ function [opt]=CompDMD_Location(N,L)
 % * 2018/01/04 Dantong Wang
 
 %% generate parameter field for getMultiStarts.m
-parametersx.number = N*(L-1);
-parametersx.min = -3*ones(1,parametersx.number);
-parametersx.max = 3*ones(1,parametersx.number);
+parameters.number = N*(L-1);
+parameters.min = -3*ones(1,parameters.number);
+parameters.max = 3*ones(1,parameters.number);
 
 %% Log-likelihood function
 objectiveFunctionx = @(x) distanceTrueMean(x,N,L);
@@ -37,8 +37,8 @@ optionsPesto.save=false;
 %optionsPesto.foldername=sprintf('%s%i%s%i','MultiInfo\dim',N,'points',L);
 
 %% optimize locations
-parametersx = getMultiStarts(parametersx, objectiveFunctionx, optionsPesto);
-optx = reshape(parametersx.MS.par(:,1),[N,L-1]);
+parameters = getMultiStarts(parameters, objectiveFunctionx, optionsPesto);
+optx = reshape(parameters.MS.par(:,1),[N,L-1]);
 optx = [optx,-sum(optx,2)];
 
 %% optimize weights for covariance
