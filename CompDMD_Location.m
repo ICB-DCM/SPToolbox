@@ -1,4 +1,4 @@
-function [opt]=CompDMD_Location(N,L)
+function [optx]=CompDMD_LocationTM(N,L)
 %% 
 % CompDMD_Location.m provides a method to calculate Sigma Points for a
 %   user-defined dimensionality and number of components for each dimension.
@@ -22,12 +22,13 @@ function [opt]=CompDMD_Location(N,L)
 % * 2018/01/04 Dantong Wang
 
 %% generate parameter field for getMultiStarts.m
+%parameters.number = N*L;
 parameters.number = N*(L-1);
 parameters.min = -3*ones(1,parameters.number);
 parameters.max = 3*ones(1,parameters.number);
 
 %% Log-likelihood function
-objectiveFunctionx = @(x) distanceTrueMean(x,N,L);
+objectiveFunction = @(x) distanceTrueMean(x,N,L);
 
 %% Set options
 optionsPesto = PestoOptions();
@@ -36,34 +37,11 @@ optionsPesto.obj_type = 'negative log-posterior';
 optionsPesto.save=false;
 %optionsPesto.foldername=sprintf('%s%i%s%i','MultiInfo\dim',N,'points',L);
 
-%% optimize locations
-parameters = getMultiStarts(parameters, objectiveFunctionx, optionsPesto);
+%% output
+parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 optx = reshape(parameters.MS.par(:,1),[N,L-1]);
 optx = [optx,-sum(optx,2)];
-
-%% optimize weights for covariance
-parametersw.number = L-1;
-parametersw.min = zeros(1,parametersw.number);
-parametersw.max = ones(1,parametersw.number);
-parametersw.constraints.A = ones(1,parametersw.number);
-parametersw.constraints.b = 1;
-
-%% Log-likelihood function
-objectiveFunctionw = @(w_c) obj_variance(w_c,optx,N,L);
-
-%% Set options
-optionsPesto = PestoOptions();
-optionsPesto.localOptimizer = 'fmincon';
-optionsPesto.n_starts = 20;
-optionsPesto.obj_type = 'negative log-posterior';
-optionsPesto.save=false;
-
-%% results
-parametersw = getMultiStarts(parametersw, objectiveFunctionw, optionsPesto);
-optw = reshape(parametersw.MS.par(:,1),[1,L-1]);
-optw = [optw,1-sum(optw,2)];
-opt = [optx;optw];
 [SPToolboxFolder,~,~]=fileparts(which('CompDMD_Location'));
-filename=sprintf('%s%i%s%i%s','DMDw_cPosInfo\B_SP_dim',N,'points',L,'.csv');
-dlmwrite(fullfile(SPToolboxFolder,filename),opt,'delimiter',',','precision',12);
+filename=sprintf('%s%i%s%i%s','DMDTrueMeanInfo\B_SP_dim',N,'points',L,'.csv');
+dlmwrite(fullfile(SPToolboxFolder,filename),optx,'delimiter',',','precision',12);
 end
