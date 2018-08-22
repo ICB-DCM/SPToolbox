@@ -1,4 +1,4 @@
-function [optx]=CompDMD_Location(N,L)
+function [splocations]=CompDMD_Location(N,L)
 %% 
 % CompDMD_Location.m provides a method to calculate Sigma Points for a
 %   user-defined dimensionality and number of components for each dimension.
@@ -13,7 +13,7 @@ function [optx]=CompDMD_Location(N,L)
 %   L: number of component for each dimension 
 %
 % Return values:
-%   optx: optimizition result of the location of dirac distribution
+%   splocations: optimizition result of the location of dirac distribution
 %
 % Additional toolbox needed:
 %   Pesto: https://github.com/ICB-DCM/PESTO
@@ -22,12 +22,13 @@ function [optx]=CompDMD_Location(N,L)
 % * 2018/01/04 Dantong Wang
 
 %% generate parameter field for getMultiStarts.m
-parameters.number = N*L;
+%parameters.number = N*L;
+parameters.number = N*(L-1);
 parameters.min = -3*ones(1,parameters.number);
 parameters.max = 3*ones(1,parameters.number);
 
 %% Log-likelihood function
-objectiveFunction = @(x) distanceDiracGaussian(x,N,L);
+objectiveFunction = @(x) distanceTrueMean(x,N,L);
 
 %% Set options
 optionsPesto = PestoOptions();
@@ -38,8 +39,10 @@ optionsPesto.save=false;
 
 %% output
 parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
-optx = reshape(parameters.MS.par(:,1),[N,L]);
-[SPToolboxFolder,~,~]=fileparts(which('CompDMD_Location'))
-filename=sprintf('%s%i%s%i%s','DMDinfo\B_SP_dim',N,'points',L,'.csv');
-dlmwrite(fullfile(SPToolboxFolder,filename),optx,'delimiter',',','precision',12);
+splocations = reshape(parameters.MS.par(:,1),[N,L-1]);
+splocations = [splocations,-sum(splocations,2)];
+[SPToolboxFolder,~,~]=fileparts(which('CompDMD_Location'));
+filepath = fullfile(SPToolboxFolder,'DMDTrueMeanInfo');
+filename=sprintf('%s%i%s%i%s','B_SP_dim',N,'points',L,'.csv');
+dlmwrite(fullfile(filepath,filename),splocations,'delimiter',',','precision',12);
 end
