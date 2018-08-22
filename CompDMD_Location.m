@@ -1,4 +1,4 @@
-function [optx]=CompDMD_LocationTM(N,L)
+function [splocations]=CompDMD_Location(N,L)
 %% 
 % CompDMD_Location.m provides a method to calculate Sigma Points for a
 %   user-defined dimensionality and number of components for each dimension.
@@ -13,7 +13,7 @@ function [optx]=CompDMD_LocationTM(N,L)
 %   L: number of component for each dimension 
 %
 % Return values:
-%   optx: optimizition result of the location of dirac distribution
+%   splocations: optimizition result of the location of dirac distribution
 %
 % Additional toolbox needed:
 %   Pesto: https://github.com/ICB-DCM/PESTO
@@ -39,9 +39,10 @@ optionsPesto.save=false;
 
 %% output
 parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
-optx = reshape(parameters.MS.par(:,1),[N,L-1]);
-optx = [optx,-sum(optx,2)];
+splocations = reshape(parameters.MS.par(:,1),[N,L-1]);
+splocations = [splocations,-sum(splocations,2)];
 [SPToolboxFolder,~,~]=fileparts(which('CompDMD_Location'));
-filename=sprintf('%s%i%s%i%s','DMDTrueMeanInfo\B_SP_dim',N,'points',L,'.csv');
-dlmwrite(fullfile(SPToolboxFolder,filename),optx,'delimiter',',','precision',12);
+filepath = fullfile(SPToolboxFolder,'DMDTrueMeanInfo');
+filename=sprintf('%s%i%s%i%s','B_SP_dim',N,'points',L,'.csv');
+dlmwrite(fullfile(filepath,filename),splocations,'delimiter',',','precision',12);
 end

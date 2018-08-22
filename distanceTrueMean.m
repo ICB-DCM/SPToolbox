@@ -1,4 +1,4 @@
-function [Dt,Gt] = distanceTrueMean(x,N,L)
+function [distanceTrue,gradientTrue] = distanceTrueMean(locations,N,L)
 %% 
 % distanceTrueMean.m constraints the mean of DMD simgma point locations to be 0, 
 % while calculating the distance between dirac mixture
@@ -10,21 +10,20 @@ function [Dt,Gt] = distanceTrueMean(x,N,L)
 %   L: number of component for each dimension 
 %
 % Return values:
-%   Dt: distance between dirac mixture approximation and normal distribution
-%   Gt: gradient of D
+%   distanceTrue: distance between dirac mixture approximation and normal distribution
+%   gradientTrue: gradient of D
 %
 % History:
 % * 2018/01/08 Dantong Wang
 %% reshape the input x with (L-1) components
-x = reshape(x,[N,L-1]);
-X = [x,-sum(x,2)];  % the last component is calculated to ensure the mean to be 0
-X = reshape(X,[1,N*L]);
+locations = reshape(locations,[N,L-1]);
+allLocations = [locations,-sum(locations,2)];  % the last component is calculated to ensure the mean to be 0
+allLocations = reshape(allLocations,[1,N*L]);
 %% calculate distance and gradiant
-[D,G] = distanceDiracGaussian(X,N,L);
+[distanceTrue,gradient] = distanceDiracGaussian(allLocations,N,L);
 %% calculate distance and gradiant for (L-1) components
-Dt = D;
-for i=1:L-1
-    dXdx(:,:,i) = [zeros(N,i-1),ones(N,1),zeros(N,L-1-i),-ones(N,1)];
+for iLocation=1:L-1
+    dXdx(:,:,iLocation) = [zeros(N,iLocation-1),ones(N,1),zeros(N,L-1-iLocation),-ones(N,1)];
 end
-Gt = permute(sum(bsxfun(@times, reshape(G,[N,L]),dXdx),2),[1,3,2]);
-Gt = reshape(Gt,[1,N*(L-1)]);
+gradientTrue = permute(sum(bsxfun(@times, reshape(gradient,[N,L]),dXdx),2),[1,3,2]);
+gradientTrue = reshape(gradientTrue,[1,N*(L-1)]);
