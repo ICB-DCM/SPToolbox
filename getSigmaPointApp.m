@@ -220,7 +220,7 @@ switch(op_SP.approx)
         w_m = 1/(size(SP.B_SP,2))*ones(size(SP.B_SP,2),1);
         w_c = 1/((size(SP.B_SP,2))-1)*ones(size(SP.B_SP,2),1);
     case 'halton'    % Halton Monte Carlo sequence
-        samplescdf = net(haltonset(2,'skip',100),op_SP.n_samples);
+        samplescdf = net(haltonset(n_b,'skip',100),op_SP.n_samples);
         op_SP.samples = norminv(samplescdf,0,1);
         SP.B_SP = transpose(op_SP.samples*S);
         if compute_derivative == 1
@@ -230,7 +230,7 @@ switch(op_SP.approx)
         w_m = 1/(size(SP.B_SP,2))*ones(size(SP.B_SP,2),1);
         w_c = 1/((size(SP.B_SP,2))-1)*ones(size(SP.B_SP,2),1);
     case 'sobol'    % Sobol Monte Carlo sequence
-        samplescdf = net(sobolset(2,'skip',100),op_SP.n_samples);
+        samplescdf = net(sobolset(n_b,'skip',100),op_SP.n_samples);
         op_SP.samples = norminv(samplescdf,0,1);
         SP.B_SP = transpose(op_SP.samples*S);
         if compute_derivative == 1
@@ -250,7 +250,7 @@ switch(op_SP.approx)
         w_m = [w0_m;wi_m*ones(2*L,1)];
         w_c = w_m;        
     case 'Julier2'    % N = 2n+1
-        w0 = -1;
+        w0 = 1/3;
         SP.B_SP = [zeros(L,1),sqrt(L/(1-w0))*S,-sqrt(L/(1-w0))*S];
         if compute_derivative == 1
             SP.dB_SPdxi = permute([zeros(L,1,n_xi),sqrt(L/(1-w0))*dSdxi,-sqrt(L/(1-w0))*dSdxi],[1,3,2]);
@@ -320,7 +320,6 @@ end
 %% Propagation of sigma points
 % Loop: Sigma points
 % [g,g_fd_f,g_fd_b,g_fd_c] = testGradient(estruct.phi(beta,SP.B_SP(:,1)),@(phi) nonfun(phi),1e-4,1,2);
-
 for i = 1:size(SP.B_SP,2)
     if compute_derivative == 0
         Y(:,:,i) = nonfun(estruct.phi(beta,SP.B_SP(:,i)));
@@ -332,9 +331,9 @@ for i = 1:size(SP.B_SP,2)
 end
 
 SP.Y = Y;
-if(any(isnan(Y)))
-    error('Failed to successfully integrate system at all SigmaPoints')
-end
+% if(any(isnan(Y)))
+%     error('Failed to successfully integrate system at all SigmaPoints')
+% end
 
 [n_t,n_y,~] = size(Y);
 
