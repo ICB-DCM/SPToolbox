@@ -1,0 +1,14 @@
+function [Dt,Gt] = distanceTM_OPTw(xw,N,L)
+x = reshape(xw(1:N*(L-1)),[N,L-1]);
+w = reshape(xw(N*(L-1)+1:(N+1)*(L-1)),[1,(L-1)]);
+W = [w,1-sum(w,2)];
+X = [x,-sum(w.*x,2)/(1-sum(w,2))];
+XW = [reshape(X,[1,N*L]),W];
+[D,G] = distanceDiracGaussianOPTw(XW,N,L);
+Dt = D;
+dXdx = repmat(permute([eye(L-1),(-w/(1-sum(w,2)))'],[3,2,1]),N,1,1);
+Gtx = permute(sum(bsxfun(@times, reshape(G(1:N*L),[N,L]),dXdx),2),[1,3,2]);
+Gtx = reshape(Gtx,[1,N*(L-1)]);
+dWdw = [eye(L-1),-ones(L-1,1)];
+Gtw = sum(bsxfun(@times,G(N*L+1:(N+1)*L),dWdw),2)';
+Gt = [Gtx,Gtw];
