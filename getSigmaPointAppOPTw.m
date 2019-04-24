@@ -50,9 +50,10 @@
 %            'diag-matrix-logarithm' for diagonal matrix with log. parametrisation or
 %            'matrix-logarithm' for full matrix with log. parametrisation
 %    .approx ... string specifying the approximation method. either
-%            'sp' for sigma_points
+%            'sp' for sigma_points developed by van der Merwe (2004)
 %            'sampled' for sampling based approximation
-%            'dmd' for approximation by dirac mixtrue distribution
+%            'cmd' for approximation by minimizing modified Cramer-von Mises
+%            distance, non-uniform weights are used
 %    .n_samples ... number of dirac mixture components, only defined if op_SP.approx='dmd'
 %
 % OUTPUTS:
@@ -175,7 +176,7 @@ else
 end
 
 switch(op_SP.approx)
-    case 'dmd'
+    case 'cmd'
         diracD = size(D,1);
         [SPToolboxFolder,~,~] = fileparts(which('CompDMD_Location'));
         filename = sprintf('%s%i%s%i%s','DMDTM_OPTwInfo/B_SP_dim',diracD,'points',op_SP.n_samples,'.csv');

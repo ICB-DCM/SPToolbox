@@ -50,9 +50,16 @@
 %            'diag-matrix-logarithm' for diagonal matrix with log. parametrisation or
 %            'matrix-logarithm' for full matrix with log. parametrisation
 %    .approx ... string specifying the approximation method. either
-%            'sp' for sigma_points
+%            'sp' for sigma_points developed by van der Merwe (2004)
 %            'sampled' for sampling based approximation
-%            'dmd' for approximation by dirac mixtrue distribution
+%            'cmd' for approximation by minimizing modified Cramer-von Mises
+%            distance
+%            'Julier1' for method developed by Julier et al. (1995)
+%            'Julier2' for method developed by Julier and Uhlmann (2004)
+%            'Menegaz' for method developed by Menegaz et al. (2001)
+%            'Lerner' for method developed by Lerner (2002)
+%            'Charalampidis' for method developed by Charalampidis and
+%            Papavassilopoulos (2011)
 %    .n_samples ... number of dirac mixture components, only defined if op_SP.approx='dmd'
 %
 % OUTPUTS:
@@ -192,7 +199,7 @@ else
 end
 
 switch(op_SP.approx)
-    case 'dmd'
+    case 'cmd'
         diracD = size(D,1);
         [SPToolboxFolder,~,~] = fileparts(which('CompDMD_Location'));
         filepath = fullfile(SPToolboxFolder,'DMDTrueMeanInfo');
