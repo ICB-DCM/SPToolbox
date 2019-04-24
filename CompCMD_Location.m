@@ -1,4 +1,4 @@
-function [splocations]=CompDMD_Location(N,L)
+function [splocations]=CompCMD_Location(N,L)
 %% 
 % CompDMD_Location.m provides a method to calculate Sigma Points for a
 %   user-defined dimensionality and number of components for each dimension.
