@@ -54,6 +54,7 @@
 %            'sampled' for sampling based approximation
 %            'cmd' for approximation by minimizing modified Cramer-von Mises
 %            distance
+%            'cmd-non-uniform' for cmd method with non-uniform weights
 %            'Julier1' for method developed by Julier et al. (1995)
 %            'Julier2' for method developed by Julier and Uhlmann (2004)
 %            'Menegaz' for method developed by Menegaz et al. (2001)
@@ -201,23 +202,46 @@ end
 switch(op_SP.approx)
     case 'cmd'
         diracD = size(D,1);
-        [SPToolboxFolder,~,~] = fileparts(which('CompDMD_Location'));
-        filepath = fullfile(SPToolboxFolder,'DMDTrueMeanInfo');
+        [SPToolboxFolder,~,~] = fileparts(which('CompCMD_Location'));
+        filepath = fullfile(SPToolboxFolder,'CMDTrueMeanInfo');
         filename = sprintf('%s%i%s%i%s','B_SP_dim',diracD,'points',op_SP.n_samples,'.csv');
         if (~exist(fullfile(filepath,filename),'file'))
             %dimension of dirac mixture distribution
-            error('The approximation does not exist. Please run CompDMD_Location first!')
+            error('The approximation does not exist. Please run CompCMD_Location first!')
         else
             %Dirac Mixture location for normal distribution
             B_SPNorm = importdata(fullfile(filepath,filename));
         end
-        SP.B_SP = S*B_SPNorm;
+        if isfield(op_SP, 'angle')
+            SP.B_SP = op_SP.angle*S*B_SP;
+        else
+            SP.B_SP = S*B_SPNorm;
+        end
         if compute_derivative == 1
             SP.dB_SPdxi = permute(sum(bsxfun(@times,B_SPNorm,permute(dSdxi,[2,4,1,3])),1),[3,4,2,1]);
         end
         % Weights
         w_m = 1/(size(SP.B_SP,2))*ones(size(SP.B_SP,2),1);
         w_c = 1/((size(SP.B_SP,2))-1)*ones(size(SP.B_SP,2),1);
+    case 'cmd-non-uniform'
+        diracD = size(D,1);
+        [SPToolboxFolder,~,~] = fileparts(which('CompCMD_LocationTM_OPTw'));
+        filename = sprintf('%s%i%s%i%s','CMDTM_OPTwInfo/B_SP_dim',diracD,'points',op_SP.n_samples,'.csv');
+        if (~exist(fullfile(SPToolboxFolder,filename),'file'))
+            %dimension of dirac mixture distribution
+            error('The approximation does not exist. Please run CompCMD_LocationTM_OPTw first!')
+        else
+            %Dirac Mixture location for normal distribution
+            B_SPw = importdata(fullfile(SPToolboxFolder,filename));
+        end
+        if isfield(op_SP, 'angle')
+            SP.B_SP = op_SP.angle*S*B_SPw(1:L,:);
+        else
+            SP.B_SP = S*B_SPw(1:L,:);
+        end
+        if compute_derivative == 1
+            SP.dB_SPdxi = permute(sum(bsxfun(@times,B_SPw(1:2,:),permute(dSdxi,[2,4,1,3])),1),[3,4,2,1]);
+        end
     case 'samples'
         SP.B_SP = transpose(op_SP.samples*S);
         if compute_derivative == 1
