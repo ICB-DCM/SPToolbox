@@ -41,8 +41,8 @@ optionsPesto.save=false;
 parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 splocations = reshape(parameters.MS.par(:,1),[N,L-1]);
 splocations = [splocations,-sum(splocations,2)];
-[SPToolboxFolder,~,~]=fileparts(which('CompDMD_Location'));
-filepath = fullfile(SPToolboxFolder,'DMDTrueMeanInfo');
+[SPToolboxFolder,~,~]=fileparts(which('CompCMD_Location'));
+filepath = fullfile(SPToolboxFolder,'CMDTrueMeanInfo');
 filename=sprintf('%s%i%s%i%s','B_SP_dim',N,'points',L,'.csv');
 dlmwrite(fullfile(filepath,filename),splocations,'delimiter',',','precision',12);
 end

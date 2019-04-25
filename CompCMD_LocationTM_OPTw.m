@@ -44,8 +44,8 @@ optx = reshape(optxw(1:N*(L-1)),[N,L-1]);
 optx = [optx,-sum(optw.*optx,2)/(1-sum(optw,2))];
 optw = [optw,1-sum(optw,2)];
 opt = [optx;optw];
-[SPToolboxFolder,~,~]=fileparts(which('CompDMD_Location'));
-filepath = fullfile(SPToolboxFolder,'DMDTM_OPTwInfo');
+[SPToolboxFolder,~,~]=fileparts(which('CompCMD_Location'));
+filepath = fullfile(SPToolboxFolder,'CMDTM_OPTwInfo');
 filename=sprintf('%s%i%s%i%s','B_SP_dim',N,'points',L,'.csv');
 dlmwrite(fullfile(filepath,filename),opt,'delimiter',',','precision',12);
 end
