@@ -213,7 +213,7 @@ switch(op_SP.approx)
             B_SPNorm = importdata(fullfile(filepath,filename));
         end
         if isfield(op_SP, 'angle')
-            SP.B_SP = op_SP.angle*S*B_SP;
+            SP.B_SP = op_SP.angle*S*B_SPNorm;
         else
             SP.B_SP = S*B_SPNorm;
         end
@@ -242,6 +242,9 @@ switch(op_SP.approx)
         if compute_derivative == 1
             SP.dB_SPdxi = permute(sum(bsxfun(@times,B_SPw(1:2,:),permute(dSdxi,[2,4,1,3])),1),[3,4,2,1]);
         end
+        % Weights
+        w_m = B_SPw(L+1,:)';
+        w_c = w_m;
     case 'samples'
         SP.B_SP = transpose(op_SP.samples*S);
         if compute_derivative == 1
@@ -251,7 +254,11 @@ switch(op_SP.approx)
         w_m = 1/(size(SP.B_SP,2))*ones(size(SP.B_SP,2),1);
         w_c = 1/((size(SP.B_SP,2))-1)*ones(size(SP.B_SP,2),1);
     case 'halton'    % Halton Monte Carlo sequence
-        samplescdf = net(haltonset(n_b,'skip',100),op_SP.n_samples);
+        if isfield(op_SP, 'skip')
+            samplescdf = net(haltonset(n_b,'skip',op_SP.skip),op_SP.n_samples);
+        else
+            samplescdf = net(haltonset(n_b,'skip',100),op_SP.n_samples);
+        end
         op_SP.samples = norminv(samplescdf,0,1);
         SP.B_SP = transpose(op_SP.samples*S);
         if compute_derivative == 1
