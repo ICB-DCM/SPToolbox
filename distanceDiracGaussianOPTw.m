@@ -86,7 +86,7 @@ G = [reshape(G1+G2,[1,N*L]),Gw];
 end
 function D2Int = dmd_D2Integral(N,x,b,w)
 %% 
-% D2Integral.m calculates the value, which need to be integrated from 0 to
+% D2Integral.m calculates the value, which needs to be integrated from 0 to
 % bmax(upper bound) to calculate D2, when dimention is odd.
 %
 % This routine will only be run when the dimension is not even.
