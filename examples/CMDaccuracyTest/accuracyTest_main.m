@@ -1,6 +1,6 @@
 function accuracyTest_main(Model)
 %% 
-% accuracyTest_main12.m computes the abosulute errors to the true mean and 
+% accuracyTest_main.m computes the absulute errors to the true mean and 
 % true covariance matrix, and generate a figure showing the trajectories.
 %
 % Parameters:

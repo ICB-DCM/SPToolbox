@@ -369,9 +369,9 @@ for i = 1:size(SP.B_SP,2)
 end
 
 SP.Y = Y;
-% if(any(isnan(Y)))
-%     error('Failed to successfully integrate system at all SigmaPoints')
-% end
+if(any(isnan(Y)))
+    error('Failed to successfully integrate system at all SigmaPoints')
+end
 
 [n_t,n_y,~] = size(Y);
 

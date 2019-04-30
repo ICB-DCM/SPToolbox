@@ -10,7 +10,7 @@ function [D,G] = distanceDiracGaussianOPTw(xw,N,L)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % Parameters:
-%   x: location of dirac distributions
+%   xw: location of dirac distributions and the corresponding weights
 %   N: dimension of dirac mixture approximation
 %   L: number of component for each dimension 
 %
@@ -33,19 +33,19 @@ ex_inb = ei(divcb);
 ex_in0 = ei(divc0);
 
 %% calculate D1
-D1 = pi^(N/2)*dmd_IN(N,bmax);
+D1 = pi^(N/2)*cmd_IN(N,bmax);
 
 %% calculate D2
 k = floor(N/2);
 l = N - k*2;
 % if N is even
 if l == 0
-    D2 = (2*pi)^(N/2)*sum(w.*(dmd_Jmm(k,bmax,c,divcb,ex_inb)-dmd_Jmm(k,0,c,divc0,ex_in0)),2);
+    D2 = (2*pi)^(N/2)*sum(w.*(cmd_Jmm(k,bmax,c,divcb,ex_inb)-cmd_Jmm(k,0,c,divc0,ex_in0)),2);
 % if N is odd
 else
-    D2 = integral(@(b)dmd_D2Integral(N,x,b,w),0,3);
+    D2 = integral(@(b)cmd_D2Integral(N,x,b,w),0,3);
 end
-% calclate Tij as a matrix
+% calculate Tij as a matrix
 Tij = permute(sum(bsxfun(@minus,x,permute(x,[1,3,2])).^2,1),[2,3,1])+1e-5;
 
 %% calculate D3
@@ -59,10 +59,10 @@ D3 = pi^(N/2)*sum(sum(bsxfun(@times,w',bsxfun(@times,w,(D31+D32))),1),2);
 %% calculate G1
 % if N is even
 if l == 0
-    G1 = 2*(2*pi)^(N/2)*(w.*x.*(dmd_Jkk1(k,bmax,c,divcb,ex_inb)-dmd_Jkk1(k,0,c,divc0,ex_in0)));
+    G1 = 2*(2*pi)^(N/2)*(w.*x.*(cmd_Jkk1(k,bmax,c,divcb,ex_inb)-cmd_Jkk1(k,0,c,divc0,ex_in0)));
 % if N is odd
 else
-    G1 = 2*(2*pi)^(N/2)*w.*x.*integral(@(b)dmd_G1Integral(N,x,b),0,3,'ArrayValue',true);
+    G1 = 2*(2*pi)^(N/2)*w.*x.*integral(@(b)cmd_G1Integral(N,x,b),0,3,'ArrayValue',true);
 end
 
 %% calculate G2
@@ -73,9 +73,9 @@ G2 = pi^(N/2)/2.*SIGMA;
 %% calculate Gw
 %calculate dD2dw
 if l == 0
-    dD2dw = (2*pi)^(N/2)*(dmd_Jmm(k,bmax,c,divcb,ex_inb)-dmd_Jmm(k,0,c,divc0,ex_in0));
+    dD2dw = (2*pi)^(N/2)*(cmd_Jmm(k,bmax,c,divcb,ex_inb)-cmd_Jmm(k,0,c,divc0,ex_in0));
 else
-    dD2dw = integral(@(b)dmd_dD2dwIntegral(N,x,b,w),0,3,'ArrayValue',true);
+    dD2dw = integral(@(b)cmd_dD2dwIntegral(N,x,b,w),0,3,'ArrayValue',true);
 end
 %calculate dD3dw
 dD3dw = pi^(N/2)*(sum(bsxfun(@times,w',(D31+D32)),1) + sum(bsxfun(@times,w,(D31+D32)),2)');
@@ -85,10 +85,10 @@ D = D1-2*D2+D3;
 G = [reshape(G1+G2,[1,N*L]),Gw];
 end
 %%
-function D2Int = dmd_D2Integral(N,x,b,w)
+function D2Int = cmd_D2Integral(N,x,b,w)
 %% 
-% D2Integral.m calculates the value, which need to be integrated from 0 to
-% bmax(upper bound) to calculate D2, when dimention is odd.
+% D2Integral.m calculates the value, which needs to be integrated from 0 to
+% bmax(upper bound) to calculate D2, when dimension is odd.
 %
 % This routine will only be run when the dimension is not even.
 %
@@ -114,9 +114,9 @@ P2 = (2*pi).^(N/2).*b.^(2*N).*PI.*SIGMA;
 D2Int = omega.*P2;
 end
 %%
-function G1Int = dmd_G1Integral(N,x,b)
+function G1Int = cmd_G1Integral(N,x,b)
 %% 
-% dmd_G1Integral.m calculates the value, which need to be integrated from 0 to
+% cmd_G1Integral.m calculates the value, which need to be integrated from 0 to
 % bmax(upper bound) to get the value of G1, when dimention is odd.
 %
 % This routine will only be run when the dimension is not even.
@@ -139,9 +139,9 @@ SIGMA = exp((-1/2)*sum(x.^2./(sigma.^2+2*b.^2),1));
 G1Int = b.^(N+1)./(sigma.^2+2*b.^2)*PI*SIGMA;
 end
 %%
-function IN = dmd_IN(N,b)
+function IN = cmd_IN(N,b)
 %% 
-% dmd_IN.m calculates IN, which is used in the calculation of D1
+% cmd_IN.m calculates IN, which is used in the calculation of D1
 %
 % Parameters:
 %   N: dimension of dirac mixture approximation
@@ -181,9 +181,9 @@ else
 end
 end
 %%
-function J0l = dmd_J0l(b,l,c,divc,ex_in)
+function J0l = cmd_J0l(b,l,c,divc,ex_in)
 %% 
-% dmd_J0l.m calculates the value of J0l, which is used in the calculation
+% cmd_J0l.m calculates the value of J0l, which is used in the calculation
 % of Jmm
 %
 % Parameters:
@@ -212,9 +212,9 @@ else
 end
 end
 %%
-function Jkk1 = dmd_Jkk1(k,b,c,divc,ex_in)
+function Jkk1 = cmd_Jkk1(k,b,c,divc,ex_in)
 %% 
-% dmd_Jkk1.m calculates the value of Jkk1, which is used in the calculation
+% cmd_Jkk1.m calculates the value of Jkk1, which is used in the calculation
 % of G1
 %
 % this routine will only be run if dimension is even.
@@ -232,15 +232,15 @@ function Jkk1 = dmd_Jkk1(k,b,c,divc,ex_in)
 %% calculate Jkk1
 SIGMA = 0;
 for j = 0:k
-    SIGMA = SIGMA+(-1)^j*nchoosek(k,j).*dmd_J0l(b,j+1,c,divc,ex_in);
+    SIGMA = SIGMA+(-1)^j*nchoosek(k,j).*cmd_J0l(b,j+1,c,divc,ex_in);
 end
 Jkk1 = 1/(2^k)*SIGMA;
 
 end
 %%
-function Jmm = dmd_Jmm(m,b,c,divc,ex_in)
+function Jmm = cmd_Jmm(m,b,c,divc,ex_in)
 %% 
-% dmd_Jmm.m calculates the value of Jmm, which is used in the calculation
+% cmd_Jmm.m calculates the value of Jmm, which is used in the calculation
 % of D2
 %
 % Parameters:
@@ -257,8 +257,8 @@ function Jmm = dmd_Jmm(m,b,c,divc,ex_in)
 %% calculate Jmm
 SIGMA = 0;
 for j = 0:m
-    SIGMA = SIGMA+(-1)^j*nchoosek(m,j).*dmd_J0l(b,j,c,divc,ex_in);
-    %SIGMA = SIGMA+(-1)^j*factorial(m)/(factorial(m-j)*factorial(j)).*dmd_J0l(b,j,c,divc,ex_in);
+    SIGMA = SIGMA+(-1)^j*nchoosek(m,j).*cmd_J0l(b,j,c,divc,ex_in);
+    %SIGMA = SIGMA+(-1)^j*factorial(m)/(factorial(m-j)*factorial(j)).*cmd_J0l(b,j,c,divc,ex_in);
 end
 %j=0:m
 %SIGMA = (-1).^j.*factorial(m)./(factorial(m-j).*factorial(j))
@@ -266,7 +266,7 @@ Jmm = 1/2^m.*SIGMA;
 
 end
 
-function dD2dwInt = dmd_dD2dwIntegral(N,x,b,w)
+function dD2dwInt = cmd_dD2dwIntegral(N,x,b,w)
 %% 
 % D2Integral.m calculates the value, which need to be integrated from 0 to
 % bmax(upper bound) to calculate D2, when dimention is odd.

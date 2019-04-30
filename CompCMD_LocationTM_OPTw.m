@@ -1,6 +1,6 @@
 function CompCMD_LocationTM_OPTw(N, L)
 %% 
-% CompDMD_Location.m provides a method to calculate Sigma Points for a
+% CompCMD_LocationTM_OPTw.m provides a method to calculate Sigma Points for a
 %   user-defined dimensionality and number of components for each dimension.
 %
 %   This function calculates the Sigma Points by minimizing the distance 
