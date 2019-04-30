@@ -13,7 +13,7 @@ function CompCMD_LocationTM_OPTw(N, L)
 %   L: number of component for each dimension 
 %
 % Return values:
-%   optx: optimizition result of the location of dirac distribution
+%   optx: optimization result of the location of dirac distribution
 %
 % Additional toolbox needed:
 %   Pesto: https://github.com/ICB-DCM/PESTO
