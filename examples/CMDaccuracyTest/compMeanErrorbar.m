@@ -4,7 +4,7 @@ function [dApp_MC, dApp_MC_neg, dApp_MC_pos] = compMeanErrorbar(model, ...
     dApp_MC_pos.Cy] = deal(zeros(size(PointN, 2), 1));
 for i_samples = 1:size(PointN, 2)
     op_SP.n_samples = PointN(i_samples);
-    rand_num = 100;
+    rand_num = 1000;
     dApprand_MC.my = zeros(rand_num, dim_out);
     dApprand_MC.Cy = zeros(rand_num, dim_out, dim_out);
 %% compute rotate data
@@ -23,7 +23,7 @@ for i_samples = 1:size(PointN, 2)
     [dApp_MC.my(i_samples), dApp_MC.Cy(i_samples)] = average_time(dApprand_MC);
     error_App_MC.my = sort(dApprand_MC.my - dApp_MC.my(i_samples));
     error_App_MC.Cy = sort(dApprand_MC.Cy - dApp_MC.Cy(i_samples));
-    error_App_MC = structfun(@(x) x(6:95), error_App_MC, 'UniformOutput', false);
+    error_App_MC = structfun(@(x) x(51:950), error_App_MC, 'UniformOutput', false);
     dApp_MC_neg.my(i_samples) = abs(min(error_App_MC.my));
     dApp_MC_neg.Cy(i_samples) = abs(min(error_App_MC.Cy));
     dApp_MC_pos.my(i_samples) = abs(max(error_App_MC.my));
