@@ -84,7 +84,6 @@ Gw = -2*dD2dw + dD3dw;
 D = D1-2*D2+D3;
 G = [reshape(G1+G2,[1,N*L]),Gw];
 end
-%%
 function D2Int = dmd_D2Integral(N,x,b,w)
 %% 
 % D2Integral.m calculates the value, which need to be integrated from 0 to
