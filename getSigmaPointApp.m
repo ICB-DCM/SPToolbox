@@ -50,9 +50,17 @@
 %            'diag-matrix-logarithm' for diagonal matrix with log. parametrisation or
 %            'matrix-logarithm' for full matrix with log. parametrisation
 %    .approx ... string specifying the approximation method. either
-%            'sp' for sigma_points
+%            'sp' for sigma_points developed by van der Merwe (2004)
 %            'sampled' for sampling based approximation
-%            'dmd' for approximation by dirac mixtrue distribution
+%            'cmd' for approximation by minimizing modified Cramer-von Mises
+%            distance
+%            'cmd-non-uniform' for cmd method with non-uniform weights
+%            'Julier1' for method developed by Julier et al. (1995)
+%            'Julier2' for method developed by Julier and Uhlmann (2004)
+%            'Menegaz' for method developed by Menegaz et al. (2001)
+%            'Lerner' for method developed by Lerner (2002)
+%            'Charalampidis' for method developed by Charalampidis and
+%            Papavassilopoulos (2011)
 %    .n_samples ... number of dirac mixture components, only defined if op_SP.approx='dmd'
 %
 % OUTPUTS:
@@ -192,25 +200,51 @@ else
 end
 
 switch(op_SP.approx)
-    case 'dmd'
+    case 'cmd'
         diracD = size(D,1);
-        [SPToolboxFolder,~,~] = fileparts(which('CompDMD_Location'));
-        filepath = fullfile(SPToolboxFolder,'DMDTrueMeanInfo');
+        [SPToolboxFolder,~,~] = fileparts(which('CompCMD_Location'));
+        filepath = fullfile(SPToolboxFolder,'CMDTrueMeanInfo');
         filename = sprintf('%s%i%s%i%s','B_SP_dim',diracD,'points',op_SP.n_samples,'.csv');
         if (~exist(fullfile(filepath,filename),'file'))
             %dimension of dirac mixture distribution
-            error('The approximation does not exist. Please run CompDMD_Location first!')
+            error('The approximation does not exist. Please run CompCMD_Location first!')
         else
             %Dirac Mixture location for normal distribution
             B_SPNorm = importdata(fullfile(filepath,filename));
         end
-        SP.B_SP = S*B_SPNorm;
+        if isfield(op_SP, 'angle')
+            SP.B_SP = op_SP.angle*S*B_SPNorm;
+        else
+            SP.B_SP = S*B_SPNorm;
+        end
         if compute_derivative == 1
             SP.dB_SPdxi = permute(sum(bsxfun(@times,B_SPNorm,permute(dSdxi,[2,4,1,3])),1),[3,4,2,1]);
         end
         % Weights
         w_m = 1/(size(SP.B_SP,2))*ones(size(SP.B_SP,2),1);
         w_c = 1/((size(SP.B_SP,2))-1)*ones(size(SP.B_SP,2),1);
+    case 'cmd-non-uniform'
+        diracD = size(D,1);
+        [SPToolboxFolder,~,~] = fileparts(which('CompCMD_LocationTM_OPTw'));
+        filename = sprintf('%s%i%s%i%s','CMDTM_OPTwInfo/B_SP_dim',diracD,'points',op_SP.n_samples,'.csv');
+        if (~exist(fullfile(SPToolboxFolder,filename),'file'))
+            %dimension of dirac mixture distribution
+            error('The approximation does not exist. Please run CompCMD_LocationTM_OPTw first!')
+        else
+            %Dirac Mixture location for normal distribution
+            B_SPw = importdata(fullfile(SPToolboxFolder,filename));
+        end
+        if isfield(op_SP, 'angle')
+            SP.B_SP = op_SP.angle*S*B_SPw(1:L,:);
+        else
+            SP.B_SP = S*B_SPw(1:L,:);
+        end
+        if compute_derivative == 1
+            SP.dB_SPdxi = permute(sum(bsxfun(@times,B_SPw(1:2,:),permute(dSdxi,[2,4,1,3])),1),[3,4,2,1]);
+        end
+        % Weights
+        w_m = B_SPw(L+1,:)';
+        w_c = w_m;
     case 'samples'
         SP.B_SP = transpose(op_SP.samples*S);
         if compute_derivative == 1
@@ -220,7 +254,11 @@ switch(op_SP.approx)
         w_m = 1/(size(SP.B_SP,2))*ones(size(SP.B_SP,2),1);
         w_c = 1/((size(SP.B_SP,2))-1)*ones(size(SP.B_SP,2),1);
     case 'halton'    % Halton Monte Carlo sequence
-        samplescdf = net(haltonset(2,'skip',100),op_SP.n_samples);
+        if isfield(op_SP, 'skip')
+            samplescdf = net(haltonset(n_b,'skip',op_SP.skip),op_SP.n_samples);
+        else
+            samplescdf = net(haltonset(n_b,'skip',100),op_SP.n_samples);
+        end
         op_SP.samples = norminv(samplescdf,0,1);
         SP.B_SP = transpose(op_SP.samples*S);
         if compute_derivative == 1
@@ -230,7 +268,7 @@ switch(op_SP.approx)
         w_m = 1/(size(SP.B_SP,2))*ones(size(SP.B_SP,2),1);
         w_c = 1/((size(SP.B_SP,2))-1)*ones(size(SP.B_SP,2),1);
     case 'sobol'    % Sobol Monte Carlo sequence
-        samplescdf = net(sobolset(2,'skip',100),op_SP.n_samples);
+        samplescdf = net(sobolset(n_b,'skip',100),op_SP.n_samples);
         op_SP.samples = norminv(samplescdf,0,1);
         SP.B_SP = transpose(op_SP.samples*S);
         if compute_derivative == 1
@@ -250,7 +288,7 @@ switch(op_SP.approx)
         w_m = [w0_m;wi_m*ones(2*L,1)];
         w_c = w_m;        
     case 'Julier2'    % N = 2n+1
-        w0 = -1;
+        w0 = 1/3;
         SP.B_SP = [zeros(L,1),sqrt(L/(1-w0))*S,-sqrt(L/(1-w0))*S];
         if compute_derivative == 1
             SP.dB_SPdxi = permute([zeros(L,1,n_xi),sqrt(L/(1-w0))*dSdxi,-sqrt(L/(1-w0))*dSdxi],[1,3,2]);
@@ -320,7 +358,6 @@ end
 %% Propagation of sigma points
 % Loop: Sigma points
 % [g,g_fd_f,g_fd_b,g_fd_c] = testGradient(estruct.phi(beta,SP.B_SP(:,1)),@(phi) nonfun(phi),1e-4,1,2);
-
 for i = 1:size(SP.B_SP,2)
     if compute_derivative == 0
         Y(:,:,i) = nonfun(estruct.phi(beta,SP.B_SP(:,i)));
