@@ -84,7 +84,7 @@ Gw = -2*dD2dw + dD3dw;
 D = D1-2*D2+D3;
 G = [reshape(G1+G2,[1,N*L]),Gw];
 end
-%%
+
 function D2Int = cmd_D2Integral(N,x,b,w)
 %% 
 % D2Integral.m calculates the value, which needs to be integrated from 0 to
@@ -138,7 +138,7 @@ PI = prod(1./((sigma.^2+2*b.^2).^(1/2)));
 SIGMA = exp((-1/2)*sum(x.^2./(sigma.^2+2*b.^2),1));
 G1Int = b.^(N+1)./(sigma.^2+2*b.^2)*PI*SIGMA;
 end
-%%
+
 function IN = cmd_IN(N,b)
 %% 
 % cmd_IN.m calculates IN, which is used in the calculation of D1

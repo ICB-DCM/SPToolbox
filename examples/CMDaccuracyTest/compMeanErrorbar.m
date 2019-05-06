@@ -1,5 +1,23 @@
 function [dApp_MC, dApp_MC_neg, dApp_MC_pos] = compMeanErrorbar(model, ...
          xi,estruct, op_SP, PointN, dim_out, dim_in, MCP)
+%% 
+% compMeanErrorbar.m computes the absolute difference between the
+% apporoximation and true values. 1000 different rotations (CMD method) or
+% samples (Halton method) are used to get the 5th and 95th percentile of
+% the errors.
+%
+% Parameters:
+%   models: models used to get the approximation
+%   xi, estruct, op_SP: same as in getSigmaPointApp.m
+%   PointN: number of points used for approximation
+%   dim_out: dimension of outputs
+%   dim_in: dimension of inputs
+%   MCP: true values computed using Monte Carlo mehtod
+%
+% Return values:
+%   dApp_MC: average absolute difference between approximation and true values
+%   dApp_MC_neg: length below the average absolute
+%   dApp_MC_pos: length above the average absolute
 [dApp_MC.my, dApp_MC.Cy, dApp_MC_neg.my, dApp_MC_neg.Cy, dApp_MC_pos.my,...
     dApp_MC_pos.Cy] = deal(zeros(size(PointN, 2), 1));
 for i_samples = 1:size(PointN, 2)
