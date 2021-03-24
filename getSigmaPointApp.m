@@ -141,19 +141,33 @@ delta = estruct.delta(xi);
 
 [D,invD,dDddelta,dinvDddelta,ddDddeltaddelta,ddinvDddeltaddelta] = xi2D(delta,op_SP.type_D);
 
+% if compute_derivative
+%     dDddelta_fd=nan(size(D,1), size(D,2), length(delta));
+%     for iD = 1 : length(delta)
+%         ddelta = zeros(length(delta),1);
+%         ddelta(iD) = 1e-5;
+%         Dp = xi2D(delta+ddelta,op_SP.type_D);
+%         Dm = xi2D(delta-ddelta,op_SP.type_D);
+%         dDddelta_fd(:,:,iD) = (Dp-Dm) / (2e-5);
+%     end
+%     disp([dDddelta, repmat(zeros(size(D,1),1), [1 1 length(delta)]), dDddelta_fd]);
+% end
+
 n_b = size(D,1);
 
 if(~isfield(op_SP,'approx'))
     op_SP.approx = 'sp';
 end
 if(strcmp(op_SP.approx,'samples'))
-if(~isfield(op_SP,'samples'))
-    persistent samples
-    if(isempty(samples))
-        samples = mvnrnd(zeros(n_b,1),eye(n_b),10000);
+    if(~isfield(op_SP,'samples'))
+        persistent samples
+        if(isempty(samples))
+            samples = mvnrnd(zeros(n_b,1),eye(n_b),op_SP.nsamples);
+        end
+        op_SP.samples = samples;
     end
-    op_SP.samples = samples;
-    end
+elseif (strcmp(op_SP.approx,'pa only'))
+    op_SP.req = [1,0,0,0,0];
 end
 
 %% Initialization
@@ -253,6 +267,14 @@ switch(op_SP.approx)
         % Weights
         w_m = 1/(size(SP.B_SP,2))*ones(size(SP.B_SP,2),1);
         w_c = 1/((size(SP.B_SP,2))-1)*ones(size(SP.B_SP,2),1);
+    case 'pa only'
+        SP.B_SP = 0;
+        if compute_derivative == 1
+            SP.dB_SPdxi = permute(dSdxi, [2 3 1]);
+        end
+        % Weights
+        w_m = 1;
+        w_c = 1;
     case 'halton'    % Halton Monte Carlo sequence
         if isfield(op_SP, 'skip')
             samplescdf = net(haltonset(n_b,'skip',op_SP.skip),op_SP.n_samples);
@@ -358,13 +380,14 @@ end
 %% Propagation of sigma points
 % Loop: Sigma points
 % [g,g_fd_f,g_fd_b,g_fd_c] = testGradient(estruct.phi(beta,SP.B_SP(:,1)),@(phi) nonfun(phi),1e-4,1,2);
-for i = 1:size(SP.B_SP,2)
+
+for iSP = 1:size(SP.B_SP,2)
     if compute_derivative == 0
-        Y(:,:,i) = nonfun(estruct.phi(beta,SP.B_SP(:,i)));
+        Y(:,:,iSP) = nonfun(estruct.phi(beta,SP.B_SP(:,iSP)));
     else
-        [Y(:,:,i),dYdphi(:,:,:,i)] = nonfun(estruct.phi(beta,SP.B_SP(:,i)));
-        dphidxi(:,:,i) = estruct.dphidbeta(beta,SP.B_SP(:,i))*estruct.dbetadxi(xi) + estruct.dphidb(beta,SP.B_SP(:,i))*SP.dB_SPdxi(:,:,i);
-        dYdxi(:,:,:,i) = permute(sum(bsxfun(@times,dYdphi(:,:,:,i),permute(dphidxi(:,:,i),[4,3,1,2])),3),[1,2,4,3]);
+        [Y(:,:,iSP),dYdphi(:,:,:,iSP)] = nonfun(estruct.phi(beta,SP.B_SP(:,iSP)));
+        dphidxi(:,:,iSP) = estruct.dphidbeta(beta,SP.B_SP(:,iSP))*estruct.dbetadxi(xi) + estruct.dphidb(beta,SP.B_SP(:,iSP))*SP.dB_SPdxi(:,:,iSP);
+        dYdxi(:,:,:,iSP) = permute(sum(bsxfun(@times,dYdphi(:,:,:,iSP),permute(dphidxi(:,:,iSP),[4,3,1,2])),3),[1,2,4,3]);
     end
 end
 
